@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satellite Image Analysis App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- تضمين أيقونات Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c;
+            /* لون خلفية داكن */
+            position: relative;
+            overflow: hidden;
+            /* لمنع ظهور أي أجزاء من الرعد خارج الشاشة */
+        }
+
+        /* طبقة التراكب الداكنة */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background-color: rgba(26, 32, 44, 0.8);
+            /* تراكب داكن لجعل النص مقروءًا أكثر */
+            z-index: -1;
+        }
+
+        /* شكل الرعد في الخلفية */
+        body::after {
+            content: "";
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 120vw;
+            height: 120vh;
+            background: linear-gradient(135deg, rgba(76, 81, 191, 0.5) 0%, rgba(107, 70, 193, 0.5) 50%, rgba(255, 255, 255, 0.1) 100%);
+            /* إنشاء شكل الرعد باستخدام clip-path */
+            clip-path: polygon(50% 0%,
+                    60% 20%,
+                    40% 20%,
+                    50% 40%,
+                    60% 40%,
+                    40% 60%,
+                    50% 60%,
+                    60% 80%,
+                    40% 80%,
+                    50% 100%,
+                    65% 85%,
+                    35% 85%,
+                    40% 65%,
+                    60% 65%,
+                    50% 45%,
+                    40% 45%,
+                    60% 25%,
+                    50% 25%,
+                    45% 5%);
+            transform: rotate(45deg);
+            z-index: -2;
+            /* وضعه خلف طبقة التراكب */
+            filter: blur(10px);
+            /* إضافة تأثير ضبابي لجعله يبدو أكثر إضاءة وخلفية */
+            animation: moveLightning 15s infinite ease-in-out;
+        }
+
+        @keyframes moveLightning {
+
+            0%,
+            100% {
+                transform: rotate(45deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(47deg) scale(1.05);
+            }
+        }
+
+        #upload-section {
+            background: rgba(26, 32, 44, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-gradient {
+            background-image: linear-gradient(to right, #4c51bf, #6b46c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen p-4 sm:p-8 text-white">
+    <div class="container mx-auto max-w-2xl text-center">
+
+        <!-- قسم العنوان -->
+        <header class="mb-10">
+            <h1 class="text-6xl font-extrabold text-gradient mb-4">
+                رؤى فضائية لا حدود لها
+            </h1>
+            <p class="text-xl text-gray-400 max-w-xl mx-auto">
+                أطلق العنان لقوة الذكاء الاصطناعي لتحليل صور الأقمار الصناعية وكشف الأسرار المخفية.
+            </p>
+        </header>
+
+        <!-- القسم الرئيسي -->
+        <div id="upload-section" class="shadow-2xl transition-all duration-300 p-8 sm:p-12">
+
+            <!-- منطقة تحميل الصورة -->
+            <div id="uploadForm"
+                class="p-6 flex flex-col items-center justify-center rounded-2xl cursor-pointer transition-all duration-300 transform hover:scale-105">
+                <svg class="h-16 w-16 text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                <span class="text-lg text-gray-400 font-medium">اسحب وأفلت صورة هنا أو <span
+                        class="text-blue-400 font-bold">تصفح</span></span>
+                <input type="file" id="imageUpload" name="file" accept="image/*" class="hidden">
+            </div>
+
+            <!-- معاينة الصورة وزر التوقع -->
+            <div id="image-container" class="mt-8 text-center hidden">
+                <img id="preview" class="rounded-xl shadow-lg border-2 border-gray-700" src="#" alt="معاينة الصورة">
+                <button type="button" id="predictBtn"
+                    class="mt-6 px-10 py-4 bg-green-600 text-white font-bold text-xl rounded-full shadow-lg hover:bg-green-700 transition duration-300 transform hover:scale-105">
+                    توقع النتيجة
+                </button>
+            </div>
+
+            <!-- قسم النتائج -->
+            <div id="result" class="mt-8 p-6 bg-green-900 border-l-4 border-green-500 rounded-xl shadow-md hidden">
+                <h2 class="text-xl font-bold text-green-300 mb-2">النتائج:</h2>
+                <p id="ratioText" class="text-4xl font-extrabold text-green-100">
+                    <span class="animate-pulse">...</span>
+                </p>
+            </div>
+
+            <!-- رسائل التحميل والخطأ -->
+            <div id="loading" class="mt-8 flex flex-col items-center hidden">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+                <span class="mt-4 text-gray-400 font-medium text-lg">جاري تحليل الصورة...</span>
+            </div>
+
+            <div id="error" class="mt-8 p-4 bg-red-900 text-red-400 rounded-lg hidden">
+                <p id="errorText" class="font-medium"></p>
+            </div>
+
+        </div>
+
+        <!-- قسم الروابط الاجتماعية والعبارة الترحيبية في الأسفل -->
+        <div class="mt-16 text-center">
+            <p class="text-xl text-gray-200 mb-6 font-bold">
+                سعدتُ بمروركم، وأتطلع لاستقبالكم في رحلة التقدم القادمة.
+            </p>
+            <div class="flex justify-center space-x-10">
+                <!-- رابط GitHub -->
+                <a href="https://github.com/Mo-Harb569" target="_blank" rel="noopener noreferrer"
+                    class="text-gray-400 hover:text-white transition duration-300">
+                    <i class="fab fa-github text-5xl"></i>
+                </a>
+                <!-- رابط LinkedIn -->
+                <a href="https://www.linkedin.com/in/mohammad-harb-514b1a2b9?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app"
+                    target="_blank" rel="noopener noreferrer"
+                    class="text-gray-400 hover:text-white transition duration-300">
+                    <i class="fab fa-linkedin text-5xl"></i>
+                </a>
+            </div>
+            <!-- عبارة المطور في الأسفل -->
+            <p class="mt-8 text-2xl font-extrabold text-gray-300">
+                Developer Mohammad Harb
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript for interactivity -->
+    <script>
+        const imageUpload = document.getElementById('imageUpload');
+        const preview = document.getElementById('preview');
+        const predictBtn = document.getElementById('predictBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const resultDiv = document.getElementById('result');
+        const ratioText = document.getElementById('ratioText');
+        const loadingDiv = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
+        const errorText = document.getElementById('errorText');
+        const imageContainer = document.getElementById('image-container');
+
+        // التعامل مع تحميل الملفات عن طريق النقر على النموذج
+        uploadForm.addEventListener('click', () => imageUpload.click());
+
+        function showMessage(message, type = 'info') {
+            errorDiv.classList.remove('hidden');
+            errorText.textContent = message;
+            if (type === 'error') {
+                errorDiv.classList.add('bg-red-900', 'text-red-400');
+                errorDiv.classList.remove('bg-yellow-900', 'text-yellow-400');
+            } else {
+                errorDiv.classList.add('bg-yellow-900', 'text-yellow-400');
+                errorDiv.classList.remove('bg-red-900', 'text-red-400');
+            }
+        }
+
+        imageUpload.addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    imageContainer.classList.remove('hidden');
+                    uploadForm.classList.add('hidden'); // إخفاء منطقة التحميل بعد اختيار الصورة
+                    resultDiv.classList.add('hidden');
+                    errorDiv.classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imageContainer.classList.add('hidden');
+                uploadForm.classList.remove('hidden');
+            }
+        });
+
+        predictBtn.addEventListener('click', async function (event) {
+            event.preventDefault();
+            const file = imageUpload.files[0];
+            if (!file) {
+                showMessage('الرجاء اختيار صورة أولاً.', 'error');
+                return;
+            }
+
+            loadingDiv.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+            errorDiv.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showMessage(data.error, 'error');
+                } else {
+                    const ratio = (data.predicted_active_pixel_ratio * 100).toFixed(2);
+                    ratioText.textContent = `${ratio}%`;
+                    resultDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                showMessage(`حدث خطأ أثناء المعالجة: ${error.message}`, 'error');
+            } finally {
+                loadingDiv.classList.add('hidden');
+            }
+        });
+
+    </script>
+</body>
+
+</html>

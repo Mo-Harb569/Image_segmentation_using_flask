@@ -1,0 +1,5 @@
+# تجاهل مجلد البيئة الافتراضية (Virtual Environment)
+venv/
+
+# تجاهل ملف الموديل الكبير
+h5_path_ASUS11G/unet_resnet_model.h5
