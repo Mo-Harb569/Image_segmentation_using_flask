@@ -1,0 +1,2 @@
+In this project, I was tasked with creating an AI model based on Deep Learning using segmentation techniques. Initially, I was given two types of data consisting of three types: Train, Test, and Validation. I analyzed this data and then segmented it as required, resulting in a complete, integrated model with a fully interactive interface using Flask techniques. The model performed the segmentation with the best possible efficiency and performance.
+Note: This project was completed during my training with the Egyptian company Cellula Tech.
